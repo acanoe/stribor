@@ -32,16 +32,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var cfgFile, directoryName, homeDirectory string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "stribor",
 	Short: "Git-based bookmark manager",
 	Long:  `CLI app for managing bookmarks using git backend, inspired by Android Password Manager`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+		if _, err := os.Stat(homeDirectory + "//." + directoryName); os.IsNotExist(err) {
+			fmt.Println("Bookmarks folder haven't been created, run stribor init to create it")
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -56,15 +58,18 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.stribor.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
+	rootCmd.PersistentFlags().StringVar(&homeDirectory, "dirHome", home, "Base directory, typically your home")
+	rootCmd.PersistentFlags().StringVar(&directoryName, "dirName", "bookmarks", "Name of the directory to save your bookmarks in")
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	viper.BindPFlag("dirHome", rootCmd.PersistentFlags().Lookup("dirHome"))
+	viper.BindPFlag("dirName", rootCmd.PersistentFlags().Lookup("dirName"))
 }
 
 // initConfig reads in config file and ENV variables if set.

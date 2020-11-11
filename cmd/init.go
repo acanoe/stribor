@@ -28,6 +28,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/spf13/cobra"
@@ -40,14 +42,10 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a new bookmark directory",
 	Long:  `Initialize a directory to be used as a git repo for the bookmark files`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
+		directory := homeDirectory + "//." + directoryName
 
-		var directory string
-
-		if len(args) < 1 {
-			directory = "bookmarks"
-		} else {
-			directory = args[0]
+		if _, err := os.Stat(homeDirectory + "//.bookmarks"); !os.IsNotExist(err) && directoryName != "bookmarks" {
+			os.RemoveAll(homeDirectory + "//.bookmarks")
 		}
 
 		if force == true {
@@ -76,6 +74,13 @@ var initCmd = &cobra.Command{
 		repo.SetConfig(config)
 
 		fmt.Println("Bookmarks folder initialized, add your first bookmark now!")
+	},
+	PostRun: func(cmd *cobra.Command, args []string) {
+		viper.SetConfigType("yaml")
+		err := viper.SafeWriteConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
