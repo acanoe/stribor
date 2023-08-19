@@ -12,6 +12,7 @@ require (
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/gosimple/slug v1.13.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
@@ -28,4 +29,5 @@ require (
 	go.etcd.io/bbolt v1.3.2 // indirect
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	gopkg.in/resty.v1 v1.12.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
