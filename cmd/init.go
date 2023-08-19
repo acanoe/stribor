@@ -35,6 +35,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var err error
 var force bool
 
 var initCmd = &cobra.Command{
@@ -42,19 +43,20 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a new bookmark directory",
 	Long:  `Initialize a directory to be used as a git repo for the bookmark files`,
 	Run: func(cmd *cobra.Command, args []string) {
-		directory := homeDirectory + "//." + directoryName
+		directory := homeDirectory + "/." + directoryName
 
-		if _, err := os.Stat(homeDirectory + "//.bookmarks"); !os.IsNotExist(err) && directoryName != "bookmarks" {
-			os.RemoveAll(homeDirectory + "//.bookmarks")
+		if _, err := os.Stat(homeDirectory + "/.bookmarks"); !os.IsNotExist(err) && directoryName != "bookmarks" {
+			os.RemoveAll(homeDirectory + "/.bookmarks")
 		}
 
-		if force == true {
+		if force {
 			fmt.Println("Using --force, I hope you know what you're doing")
-			os.RemoveAll(directory)
+			if err := os.RemoveAll(directory); err != nil {
+				log.Fatal(err)
+			}
 		}
 
-		err := os.Mkdir(directory, 0755)
-
+		err = os.Mkdir(directory, 0755)
 		if err != nil {
 			if errors.Is(err, os.ErrExist) {
 				log.Fatal("Folder already exist, use --force to overwrite")
@@ -62,24 +64,26 @@ var initCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		repo, error := git.PlainInit(directory, false)
-
-		if error != nil {
-			log.Fatal(error)
+		repo, err := git.PlainInit(directory, false)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 		config := config.NewConfig()
-		config.User.Name = "Stribor"
+		config.User.Name = "stribor"
+		config.User.Email = "stribor@local.store"
 
 		repo.SetConfig(config)
 
 		fmt.Println("Bookmarks folder initialized, add your first bookmark now!")
 	},
 	PostRun: func(cmd *cobra.Command, args []string) {
-		viper.SetConfigType("yaml")
-		err := viper.SafeWriteConfig()
-		if err != nil {
-			log.Fatal(err)
+		if viper.ConfigFileUsed() == "" {
+			viper.SetConfigType("yaml")
+			err := viper.SafeWriteConfig()
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	},
 }
