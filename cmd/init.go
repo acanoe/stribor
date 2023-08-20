@@ -45,8 +45,8 @@ var initCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		directory := filepath.Join(homeDirectory, "."+directoryName)
 
-		if _, err := os.Stat(homeDirectory + "/.bookmarks"); !os.IsNotExist(err) && directoryName != "bookmarks" {
-			os.RemoveAll(homeDirectory + "/.bookmarks")
+		if _, err := os.Stat(homeDirectory + "//.bookmarks"); !os.IsNotExist(err) && directoryName != "bookmarks" {
+			os.RemoveAll(homeDirectory + "//.bookmarks")
 		}
 
 		if force {
