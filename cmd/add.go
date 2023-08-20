@@ -38,12 +38,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Bookmark struct {
-	URL      string
-	Title    string
-	Category string
-}
-
 var category string
 
 // addCmd represents the add command
@@ -53,13 +47,11 @@ var addCmd = &cobra.Command{
 	Long:    `Add new url to your bookmarks, saving it as a json file in your bookmarks directory and then committing it`,
 	Example: `stribor add http://github.com/acanoe/stribor`,
 	Run: func(cmd *cobra.Command, args []string) {
-		directory := homeDirectory + "/." + directoryName
+		directory := filepath.Join(homeDirectory, "."+directoryName)
 
 		// Parse url
 		url, err := url.Parse(args[0])
-		if err != nil {
-			log.Fatal("Cannot parse url")
-		}
+		handleErr(err, "Cannot parse URL")
 
 		// build struct
 		bookmark := Bookmark{
@@ -70,9 +62,7 @@ var addCmd = &cobra.Command{
 
 		// convert to yaml
 		yamlData, err := yaml.Marshal(&bookmark)
-		if err != nil {
-			log.Fatal("Cannot convert to yaml")
-		}
+		handleErr(err, "Cannot serialise to yaml")
 
 		// check subfolder
 		siteFolder := url.Host
@@ -95,29 +85,25 @@ var addCmd = &cobra.Command{
 		// write file if not already exists
 		filePath := filepath.Join(siteFolderPath, fileName)
 		if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
-			if err := os.WriteFile(filePath, yamlData, 0755); err != nil {
-				log.Fatal("Cannot write file")
-			}
+			err := os.WriteFile(filePath, yamlData, 0755)
+			handleErr(err, "Cannot write file")
+		} else {
+			fmt.Println("Already exists, doing nothing...")
+			return
 		}
 
 		// check repo and working dir
 		//   opens an already existing repository.
 		r, err := git.PlainOpen(directory)
-		if err != nil {
-			log.Fatal("Not a git repo")
-		}
+		handleErr(err, "Directory home is not a git repo")
 
 		//   get worktree
 		w, err := r.Worktree()
-		if err != nil {
-			log.Fatal("Cannot get work tree")
-		}
+		handleErr(err, "Cannot get worktree status")
 
 		//   get status
 		status, err := w.Status()
-		if err != nil {
-			log.Fatal("Cannot get status")
-		}
+		handleErr(err, "Cannot get git status")
 
 		//   check if file is already committed
 		gitFilePath := filepath.Join(siteFolder, fileName)
@@ -133,14 +119,10 @@ var addCmd = &cobra.Command{
 					When:  time.Now(),
 				},
 			})
-			if err != nil {
-				log.Fatalf("Cannot commit file: %v", err)
-			}
+			handleErr(err, "Cannot commit file")
 
 			obj, err := r.CommitObject(commit)
-			if err != nil {
-				log.Fatal("Cannot read HEAD")
-			}
+			handleErr(err, "Cannot read HEAD")
 
 			fmt.Println(obj)
 
@@ -150,7 +132,7 @@ var addCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(addCmd)
-	addCmd.Flags().StringP("category", "c", "other", "Bookmark category")
+	addCmd.Flags().StringVarP(&category, "category", "c", "other", "Bookmark category")
 
 	// Here you will define your flags and configuration settings.
 
