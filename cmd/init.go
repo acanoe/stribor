@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 
@@ -35,7 +36,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var err error
 var force bool
 
 var initCmd = &cobra.Command{
@@ -43,10 +43,10 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a new bookmark directory",
 	Long:  `Initialize a directory to be used as a git repo for the bookmark files`,
 	Run: func(cmd *cobra.Command, args []string) {
-		directory := homeDirectory + "/." + directoryName
+		directory := filepath.Join(homeDirectory, "."+directoryName)
 
-		if _, err := os.Stat(homeDirectory + "/.bookmarks"); !os.IsNotExist(err) && directoryName != "bookmarks" {
-			os.RemoveAll(homeDirectory + "/.bookmarks")
+		if _, err := os.Stat(homeDirectory + "//.bookmarks"); !os.IsNotExist(err) && directoryName != "bookmarks" {
+			os.RemoveAll(homeDirectory + "//.bookmarks")
 		}
 
 		if force {
@@ -56,7 +56,7 @@ var initCmd = &cobra.Command{
 			}
 		}
 
-		err = os.Mkdir(directory, 0755)
+		err := os.Mkdir(directory, 0755)
 		if err != nil {
 			if errors.Is(err, os.ErrExist) {
 				log.Fatal("Folder already exist, use --force to overwrite")
